@@ -2,7 +2,7 @@ package handler
 
 import (
 	"errors"
-	"ferry-learn/middleware"
+	jwta "ferry-learn/pkg/jwtauth"
 	"ferry-learn/models/system"
 	"log"
 
@@ -46,13 +46,27 @@ func PayloadFunc(data interface{}) jwt.MapClaims {
 		u, _ := v["user"].(system.SysUser)
 		r, _ := v["role"].(system.SysRole)
 		return jwt.MapClaims{
-			middleware.IdentityKey: u.UserId,
-			middleware.RoleIdKey:   r.RoleId,
-			middleware.RoleKey:     r.RoleKey,
-			middleware.NiceKey:     u.Username,
-			middleware.RoleNameKey: r.RoleName,
+			jwta.IdentityKey: u.UserId,
+			jwta.RoleIdKey:   r.RoleId,
+			jwta.RoleKey:     r.RoleKey,
+			jwta.NiceKey:     u.Username,
+			jwta.RoleNameKey: r.RoleName,
 		}
 
 	}
 	return jwt.MapClaims{}
+}
+
+func Authorizator(data interface{}, c *gin.Context) bool {
+	if v, ok := data.(map[string]interface{}); ok {
+		u, _ := v["user"].(system.SysUser)
+		r, _ := v["role"].(system.SysRole)
+		c.Set("role", r.RoleName)
+		c.Set("roleIds", r.RoleId)
+		c.Set("userId", u.UserId)
+		c.Set("userName", u.Username)
+
+		return true
+	}
+	return false
 }
